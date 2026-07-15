@@ -1,0 +1,525 @@
+# What We Have Done So Far
+
+## 1. Created Vegetation Ground Truth
+
+You started with:
+
+```text
+Vegetation polygons
+```
+
+and converted them into:
+
+```text
+Binary vegetation masks
+```
+
+where:
+
+```text
+0 = Background
+1 = Vegetation
+```
+
+✅ Completed
+
+***
+
+## 2. Tiled the Dataset
+
+Generated:
+
+```text
+512 × 512 tiles
+```
+
+for both:
+
+```text
+images
+masks
+```
+
+✅ Completed
+
+***
+
+## 3. Scene-Level Split
+
+You correctly avoided tile leakage by splitting at the scene level.
+
+```text
+62 scenes total
+```
+
+Split into:
+
+```text
+Train scenes
+Validation scenes
+Test scenes
+```
+
+✅ Completed
+
+***
+
+## 4. Created Final Vegetation Dataset
+
+Final counts:
+
+```text
+Train = 13336
+Val   = 2652
+Test  = 3240
+```
+
+Total:
+
+```text
+19228 tiles
+```
+
+✅ Completed
+
+***
+
+## 5. Verified Masks
+
+We checked:
+
+```python
+mask.unique()
+```
+
+Results:
+
+```text
+[0.0]
+```
+
+and
+
+```text
+[0.0, 1.0]
+```
+
+Meaning:
+
+```text
+Background-only tiles exist
+Vegetation tiles exist
+```
+
+Your labels are valid.
+
+✅ Completed
+
+***
+
+## 6. Dataset Loader
+
+Created:
+
+```python
+VegetationDataset
+```
+
+that returns:
+
+```python
+image.shape
+# [3,512,512]
+
+mask.shape
+# [1,512,512]
+```
+
+✅ Completed
+
+***
+
+## 7. DINOv3 Weights
+
+Downloaded:
+
+```text
+dinov3_vits16_pretrain_lvd1689m-08c60483.pth
+```
+
+Verified:
+
+```text
+Embed dim = 384
+Patch size = 16
+12 transformer blocks
+```
+
+✅ Completed
+
+***
+
+## 8. Built Vegetation Segmentation Model
+
+Pipeline:
+
+```text
+Image
+↓
+DINOv3 Encoder
+↓
+Feature Map
+↓
+Segmentation Decoder
+↓
+Vegetation Mask
+```
+
+Output:
+
+```python
+torch.Size([1,1,512,512])
+```
+
+✅ Completed
+
+***
+
+## 9. Training Pipeline
+
+Built:
+
+```text
+Loss:
+    BCE
+    +
+    Dice
+
+Optimizer:
+    AdamW
+```
+
+Ready to train:
+
+```text
+vegetation_dinov3_best.pth
+```
+
+✅ Ready
+
+***
+
+# What Comes Next
+
+Your final objective is not vegetation segmentation.
+
+Your actual goal is:
+
+```text
+Semantic Change Detection
+```
+
+using DINO features.
+
+***
+
+# Phase 2 — Train Semantic Models
+
+Train:
+
+## Vegetation
+
+Current task
+
+```text
+Input image
+↓
+Vegetation mask
+```
+
+Output:
+
+```text
+vegetation_dinov3_best.pth
+```
+
+***
+
+## Buildings
+
+Create:
+
+```text
+Building polygons
+↓
+Masks
+↓
+Tiles
+↓
+DINOv3 training
+```
+
+Output:
+
+```text
+building_dinov3_best.pth
+```
+
+***
+
+## Roads
+
+Create:
+
+```text
+Road polygons
+↓
+Masks
+↓
+Tiles
+↓
+DINOv3 training
+```
+
+Output:
+
+```text
+road_dinov3_best.pth
+```
+
+***
+
+## Water
+
+Create:
+
+```text
+Water polygons
+↓
+Masks
+↓
+Tiles
+↓
+DINOv3 training
+```
+
+Output:
+
+```text
+water_dinov3_best.pth
+```
+
+***
+
+# Phase 3 — Generate Semantic Layers
+
+For each timestamp:
+
+```text
+T1 image
+↓
+Vegetation model
+↓
+Vegetation mask
+
+T1 image
+↓
+Building model
+↓
+Building mask
+
+T1 image
+↓
+Road model
+↓
+Road mask
+
+T1 image
+↓
+Water model
+↓
+Water mask
+```
+
+Same for:
+
+```text
+T2
+```
+
+Result:
+
+```text
+T1 semantic map
+T2 semantic map
+```
+
+***
+
+# Phase 4 — Image Registration
+
+Align:
+
+```text
+T1
+T2
+```
+
+using:
+
+```text
+SIFT
++
+FLANN
++
+RANSAC
+```
+
+to remove geometric shifts.
+
+Pipeline:
+
+```text
+Keypoints
+↓
+Matches
+↓
+Homography
+↓
+Warp
+↓
+Aligned images
+```
+
+✅ Essential for change detection
+
+***
+
+# Phase 5 — Semantic Change Detection
+
+Instead of:
+
+```text
+Pixel difference
+```
+
+you compare:
+
+```text
+Vegetation(T1) vs Vegetation(T2)
+Building(T1)   vs Building(T2)
+Road(T1)       vs Road(T2)
+Water(T1)      vs Water(T2)
+```
+
+Examples:
+
+```text
+Vegetation → Building
+```
+
+means:
+
+```text
+Urban expansion
+```
+
+***
+
+```text
+Building → Empty
+```
+
+means:
+
+```text
+Demolition
+```
+
+***
+
+```text
+Vegetation → Vegetation
+```
+
+means:
+
+```text
+No change
+```
+
+***
+
+# Phase 6 — SemDINO-Style Model
+
+Final architecture:
+
+```text
+T1
+↓
+DINOv3
+
+T2
+↓
+DINOv3
+
+Semantic masks
+↓
+Fusion
+
+Feature difference
+↓
+Transformer Decoder
+↓
+Change Map
+```
+
+Outputs:
+
+```text
+No Change
+Vegetation Loss
+New Building
+Road Construction
+Water Change
+```
+
+***
+
+# Current Project Status
+
+```text
+Vegetation Labels           ✅
+Vegetation Dataset          ✅
+Train/Val/Test Split        ✅
+DINOv3 Backbone            ✅
+Segmentation Model         ✅
+Training Pipeline          ✅
+
+Vegetation Training        ⏳
+
+Building Dataset           ❌
+Road Dataset               ❌
+Water Dataset              ❌
+
+Semantic Change Detection  ❌
+SemDINO Network            ❌
+```
+
+## Immediate Next Step
+
+Run the vegetation training and obtain:
+
+```text
+vegetation_dinov3_best.pth
+```
+
+Once vegetation reaches good IoU/Dice performance, repeat the same pipeline for:
+
+```text
+Buildings
+Roads
+Water
+```
+
+Those four semantic models become the foundation of your final change-detection system.

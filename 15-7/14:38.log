@@ -1,0 +1,254 @@
+Yes, **the final model is SemDINO-style**, but **we are not at the SemDINO training stage yet**.
+
+Think of your project as:
+
+```text
+Stage 1
+↓
+Prepare semantic datasets
+
+Stage 2
+↓
+Train semantic understanding
+
+Stage 3
+↓
+Create bi-temporal pairs
+
+Stage 4
+↓
+Train SemDINO
+```
+
+Right now you are in **Stage 1**.
+
+***
+
+## Why we generated vegetation masks
+
+SemDINO does **not** train directly from GeoJSON polygons.
+
+It ultimately needs semantic supervision such as:
+
+```text
+T1 semantic map
+T2 semantic map
+change map
+```
+
+For vegetation we currently have:
+
+```text
+RGB image
++
+Vegetation polygons
+```
+
+So the first step is:
+
+```text
+GeoJSON polygons
+↓
+Raster masks
+↓
+Training labels
+```
+
+which you have now successfully created.
+
+***
+
+## What happens next
+
+For vegetation:
+
+```text
+RGB
+↓
+Vegetation Mask
+```
+
+We create image-mask tiles:
+
+```text
+512 x 512
+
+images/
+masks/
+```
+
+Example:
+
+```text
+tile_001.png
+tile_001_mask.png
+```
+
+***
+
+## Then DINO, not SegFormer
+
+Since your final goal is SemDINO-style:
+
+I would not spend much effort on SegFormer.
+
+Instead:
+
+```text
+DINOv3 features
++
+light segmentation decoder
+```
+
+for vegetation.
+
+Purpose:
+
+```text
+Learn vegetation semantics
+```
+
+not change detection yet.
+
+***
+
+## Final Architecture Actually Looks Like
+
+### Vegetation Training
+
+Current stage:
+
+```text
+Vegetation Image
++
+Vegetation Polygon
+↓
+Vegetation Mask
+↓
+Tiles
+↓
+DINOv3 Encoder
+↓
+Vegetation Decoder
+↓
+Vegetation Prediction
+```
+
+***
+
+### Road Training
+
+```text
+Road Image
++
+Road Polygon
+↓
+Road Mask
+↓
+DINOv3 Encoder
+↓
+Road Decoder
+```
+
+***
+
+### Building Training
+
+```text
+Building Image
++
+Building Polygons
+↓
+Building Masks
+↓
+DINOv3 Encoder
+↓
+Building Decoder
+```
+
+***
+
+### Water Training
+
+```text
+Water Image
++
+Water Polygon
+↓
+Water Mask
+↓
+DINOv3 Encoder
+↓
+Water Decoder
+```
+
+***
+
+## Then SemDINO
+
+After all four semantic datasets exist:
+
+```text
+Vegetation
+Road
+Building
+Water
+```
+
+you create:
+
+```text
+T1 Image
+T2 Image
+```
+
+pairs.
+
+Then SemDINO receives:
+
+```text
+Image T1
+Image T2
+```
+
+and learns:
+
+```text
+Semantic T1
+Semantic T2
+Binary Change
+Class Change
+```
+
+***
+
+## Your Immediate Next Step
+
+Not SemDINO yet.
+
+Do this:
+
+```text
+Vegetation GeoJSON
+↓
+Vegetation Mask
+✓ Done
+
+Vegetation Mask
+↓
+512x512 Tiles
+↓
+Train DINOv3 Semantic Vegetation Model
+```
+
+Then repeat for:
+
+```text
+Road
+Building
+Water
+```
+
+Only after all semantic datasets are ready do we build the dual-branch **SemDINO change detector**.
+
+So **yes, the final model is SemDINO-style**, but the vegetation-mask generation you just completed is the correct first step needed before SemDINO can be trained.

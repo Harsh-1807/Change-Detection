@@ -1,0 +1,20 @@
+
+Good — that confirms the architecture problem is real and specific. DINOv3's HF card documents that a 512×512 image produces 1 CLS + 4 register tokens + patch tokens (not just 1 CLS token like a plain ViT), and DINOv3 uses RoPE rather than a learned `pos_embed`. Loading that checkpoint into `timm.create_model("vit_small_patch16_224", ...)` — a plain ViT — with `strict=False` means the position-embedding and RoPE-related keys are almost certainly mismatched and silently dropped, and even if you fix the loading, cell 25's `feat[:, 1:, :]` only strips the CLS token, not the 4 register tokens, which would misalign every patch in the reshape.
+
+Here's what I'll build, given CPU-only:
+
+1. **A diagnostic script** — loads your actual checkpoint and tells you exactly which keys matched/failed, instead of guessing.
+2. **A corrected model** — loads DINOv3 through `transformers`, which guarantees the right architecture (RoPE, register tokens, correct key names) instead of hand-loading into a mismatched timm model.
+3. **A feature-caching step** — this is the actual key to making CPU training "fast": run the frozen encoder over every tile *once*, cache the output tensors to disk, then train the decoder against cached features. Right now cell 37 reruns the full ViT forward pass every single epoch on every image — that's the majority of your CPU time being spent on a computation that never changes while the encoder is frozen.
+4. Honest CPU guidance: full encoder fine-tuning (cell 45, 100 epochs × 5000 tiles, unfrozen ViT) is not realistic on CPU — I'll explain why and suggest what to do instead.
+
+Let me build these.**Run in this order:**
+
+1. `diagnose_dinov3_weights.py` — loads your actual checkpoint into the old timm architecture and prints exactly which keys matched vs. got silently dropped, plus a coverage %. This gives you real evidence instead of a guess about how broken the loading is.
+2. `model_dinov3.py` — replaces `DinoV3Vegetation`, loading through `transformers` so the architecture (RoPE, register tokens) actually matches the checkpoint. Also fixes a second bug you'd hit even after fixing the loading: your old `forward` only strips 1 CLS token (`feat[:, 1:, :]`), but DINOv3-S has 4 register tokens too — leaving them in would misalign every patch in the reshape.
+3. `cache_features.py` — run once per split. Runs the frozen ViT forward pass over every tile a single time and saves the output to disk, instead of recomputing it every epoch.
+4. `train_decoder_cpu.py` — trains only the decoder against cached features. This is the part that should actually feel fast on your machine.
+
+One thing I won't sugarcoat: full encoder fine-tuning (what your old cell 45 was doing — unfrozen ViT, 100 epochs, 5000 tiles) isn't realistic on CPU regardless of code quality; that's a multi-day job, not hours. Decoder-only training on cached features is the right stopping point for CPU. If you get GPU access later (even a free Colab session), that's when unfreezing the encoder becomes worth trying.
+
+You'll need `pip install transformers` for `model_dinov3.py`. Also note: `dataset.py` in `cache_features.py` refers to your existing `VegetationDataset` class from cell 29 — drop that class into its own `dataset.py` file alongside these, or adjust the import to wherever you keep it.

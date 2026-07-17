@@ -1,0 +1,32 @@
+Starting from existing model (val_dice=0.5049)
+Epoch 001 | train_loss=0.3142 | val_loss=1.1676 | val_dice=0.5206 | lr=1.00e-03
+  -> new best (dice=0.5206), saved to C:\Users\13519\first_version_change_detection\vegetation_decoder_best.pth
+Epoch 002 | train_loss=0.3119 | val_loss=0.8663 | val_dice=0.4932 | lr=1.00e-03
+Epoch 003 | train_loss=0.3288 | val_loss=1.1036 | val_dice=0.4988 | lr=1.00e-03
+Epoch 004 | train_loss=0.2970 | val_loss=1.0088 | val_dice=0.5218 | lr=1.00e-03
+  -> new best (dice=0.5218), saved to C:\Users\13519\first_version_change_detection\vegetation_decoder_best.pth
+Epoch 005 | train_loss=0.2973 | val_loss=0.9753 | val_dice=0.5118 | lr=1.00e-03
+Epoch 006 | train_loss=0.2936 | val_loss=0.8478 | val_dice=0.5076 | lr=1.00e-03
+Epoch 007 | train_loss=0.2845 | val_loss=1.0283 | val_dice=0.4816 | lr=5.00e-04
+Epoch 008 | train_loss=0.2581 | val_loss=1.2391 | val_dice=0.5105 | lr=5.00e-04
+Epoch 009 | train_loss=0.2522 | val_loss=1.2628 | val_dice=0.5220 | lr=5.00e-04
+  -> new best (dice=0.5220), saved to C:\Users\13519\first_version_change_detection\vegetation_decoder_best.pth
+Epoch 010 | train_loss=0.2485 | val_loss=1.4049 | val_dice=0.5236 | lr=5.00e-04
+  -> new best (dice=0.5236), saved to C:\Users\13519\first_version_change_detection\vegetation_decoder_best.pth
+Epoch 011 | train_loss=0.2392 | val_loss=1.3538 | val_dice=0.5068 | lr=5.00e-04
+Epoch 012 | train_loss=0.2398 | val_loss=1.5992 | val_dice=0.5236 | lr=5.00e-04
+Epoch 013 | train_loss=0.2368 | val_loss=1.5786 | val_dice=0.5252 | lr=5.00e-04
+  -> new best (dice=0.5252), saved to C:\Users\13519\first_version_change_detection\vegetation_decoder_best.pth
+Epoch 014 | train_loss=0.2347 | val_loss=1.2785 | val_dice=0.4975 | lr=5.00e-04
+
+
+
+Threshold 0.25  Mean Dice = 0.5013
+Threshold 0.30  Mean Dice = 0.5072
+Threshold 0.40  Mean Dice = 0.5135
+Threshold 0.50  Mean Dice = 0.5216
+
+============================================================
+BEST THRESHOLD = 0.50
+BEST DICE      = 0.5216
+============================================================
